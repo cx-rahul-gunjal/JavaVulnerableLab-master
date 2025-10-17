@@ -1,15 +1,9 @@
-FROM ubuntu:17.10
-ENV WORKDIR /usr/src/app/
-WORKDIR $WORKDIR
-COPY package*.json $WORKDIR
-RUN npm install --production --no-cache
+FROM tomcat
 
-FROM node:12-alpine
-ENV USER node
-ENV WORKDIR /home/$USER/app
-WORKDIR $WORKDIR
-ADD --from=0 /usr/src/app/node_modules node_modules
-RUN chown $USER:$USER $WORKDIR
-COPY --chown=node . $WORKDIR
+COPY . .
 
-EXPOSE 22
+RUN apt-get update ; apt-get install maven default-jdk -y ; update-alternatives --config javac
+
+RUN mvn clean package ; cp target/*.war /usr/local/tomcat/webapps/
+
+CMD ["catalina.sh","run"]
