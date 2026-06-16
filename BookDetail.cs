@@ -467,14 +467,16 @@ void Rating_Show() {
 	bool ActionInsert=true;
 	
 	if (p_Rating_item_id.Value.Length > 0 ) {
-		string sWhere = "";
-		
-		sWhere += "item_id=" + CCUtility.ToSQL(p_Rating_item_id.Value, FieldTypes.Number);
-		
+		// Use a parameterized query to prevent SQL Injection (CWE-89).
+		// OleDb uses positional '?' placeholders; the item_id value is
+		// bound as an OleDbParameter so it is never concatenated into SQL.
+		string sSQL = "select * from items where item_id=?";
+		OleDbCommand ratingCmd = new OleDbCommand(sSQL, Utility.Connection);
+		ratingCmd.Parameters.Add(new OleDbParameter("item_id", OleDbType.Integer)).Value =
+			int.Parse(p_Rating_item_id.Value);
 // Rating Open Event begin
 // Rating Open Event end
-		string sSQL = "select * from items where " + sWhere;
-		OleDbDataAdapter dsCommand = new OleDbDataAdapter(sSQL, Utility.Connection);
+		OleDbDataAdapter dsCommand = new OleDbDataAdapter(ratingCmd);
 		DataSet ds = new DataSet();
 		DataRow row;
 
