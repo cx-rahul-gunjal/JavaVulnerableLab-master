@@ -580,10 +580,17 @@ if (Int16.Parse(Rating_rating_view.Text)==0){
 	        sSQL = sSQL + " where " + sWhere;
 		
 // Rating Update Event begin
-sSQL="update items set rating=rating+" + Rating_rating.SelectedItem.Value + ", rating_count=rating_count+1 where item_id=" + Rating_item_id.Value;
+// Use a parameterized query to prevent SQL Injection (CWE-89).
+// Rating_rating.SelectedItem.Value and Rating_item_id.Value are user-controlled
+// inputs and must never be concatenated directly into SQL strings.
+sSQL = "update items set rating=rating+?, rating_count=rating_count+1 where item_id=?";
 // Rating Update Event end
 Rating_BeforeSQLExecute(sSQL,"Update");
 		OleDbCommand cmd = new OleDbCommand(sSQL, Utility.Connection);
+		// Bind the rating value as a numeric parameter to prevent injection.
+		cmd.Parameters.AddWithValue("@rating", int.Parse(Rating_rating.SelectedItem.Value));
+		// Bind the item_id value as a numeric parameter to prevent injection.
+		cmd.Parameters.AddWithValue("@item_id", int.Parse(Rating_item_id.Value));
 			try {
 				cmd.ExecuteNonQuery();
 			} catch(Exception e) {
